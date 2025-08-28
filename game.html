@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Space Invaders</title>
+  <style>
+    body { margin: 0; background: black; overflow: hidden; }
+    canvas { display: block; margin: auto; background: #111; }
+    #scoreboard {
+      position: absolute; top: 10px; left: 10px;
+      color: white; font-family: Arial, sans-serif; font-size: 20px;
+    }
+    #endGameBtn {
+      position: absolute; top: 10px; right: 10px;
+      padding: 10px; background: red; color: white;
+      border: none; border-radius: 5px; font-size: 16px;
+    }
+    #controls {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 20px;
+    }
+    .btn {
+      width: 60px; height: 60px;
+      background: rgba(255,255,255,0.2); border-radius: 50%; border: 2px solid white;
+      color: white; font-size: 20px;
+      display: flex; justify-content: center; align-items: center;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="scoreboard">Score: 0 | Level: 1</div>
+  <button id="endGameBtn">End Game</button>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <div id="controls">
+    <div class="btn" id="leftBtn">⬅️</div>
+    <div class="btn" id="shootBtn">🔼</div>
+    <div class="btn" id="rightBtn">➡️</div>
+  </div>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreboard = document.getElementById("scoreboard");
+    const endGameBtn = document.getElementById("endGameBtn");
+
+    let ship = { x: canvas.width / 2 - 15, y: canvas.height - 60, width: 30, height: 30 };
+    let bullets = [];
+    let aliens = [];
+    let alienRows = 3, alienCols = 6;
+    let alienImg = new Image();
+    alienImg.src = "./alien no eyes.png";
+
+    let rightPressed = false, leftPressed = false, shootPressed = false;
+    let score = 0, level = 1;
+    let gameRunning = true;
+
+    let bulletSpeed = 4;        // slower bullet speed
+    let alienSpeedY = 0.2;      // base downward speed
+    let alienShootProbability = 0.002; 
+    let alienBullets = [];
+
+    // Create aliens
+    function createAliens() {
+      aliens = [];
+      for (let r = 0; r < alienRows; r++) {
+        for (let c = 0; c < alienCols; c++) {
+          aliens.push({ x: 60 + c * 60, y: 30 + r * 50, width: 30, height: 30, alive: true });
+        }
+      }
+    }
+    createAliens();
+
+    // Controls (keyboard + mobile buttons)
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") rightPressed = true;
+      if (e.key === "ArrowLeft") leftPressed = true;
+      if (e.key === " ") shootPressed = true;
+    });
+    document.addEventListener("keyup", e => {
+      if (e.key === "ArrowRight") rightPressed = false;
+      if (e.key === "ArrowLeft") leftPressed = false;
+      if (e.key === " ") shootPressed = false;
+    });
+    document.getElementById("leftBtn").addEventListener("touchstart", () => leftPressed = true);
+    document.getElementById("leftBtn").addEventListener("touchend", () => leftPressed = false);
+    document.getElementById("rightBtn").addEventListener("touchstart", () => rightPressed = true);
+    document.getElementById("rightBtn").addEventListener("touchend", () => rightPressed = false);
+    document.getElementById("shootBtn").addEventListener("touchstart", () => shootPressed = true);
+    document.getElementById("shootBtn").addEventListener("touchend", () => shootPressed = false);
+
+    // End Game
+    endGameBtn.addEventListener("click", () => {
+      gameRunning = false;
+      alert(`Game Over! Final Score: ${score}`);
+      document.location.reload();
+    });
+
+    // Draw functions
+    function drawShip() {
+      ctx.fillStyle = "lime";
+      ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
+    }
+    function drawAliens() {
+      for (let alien of aliens) {
+        if (alien.alive) ctx.drawImage(alienImg, alien.x, alien.y, alien.width, alien.height);
+      }
+    }
+    function drawBullets() {
+      ctx.fillStyle = "yellow";
+      for (let b of bullets) ctx.fillRect(b.x, b.y, b.width, b.height);
+      ctx.fillStyle = "red";
+      for (let b of alienBullets) ctx.fillRect(b.x, b.y, b.width, b.height);
+    }
+
+    // Game loop
+    function update() {
+      if (!gameRunning) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Move ship
+      if (rightPressed && ship.x < canvas.width - ship.width) ship.x += 5;
+      if (leftPressed && ship.x > 0) ship.x -= 5;
+      if (shootPressed) {
+        if (bullets.length < 5) {
+          bullets.push({ x: ship.x + ship.width / 2 - 2, y: ship.y, width: 4, height: 10 });
+        }
+        shootPressed = false;
+      }
+
+      // Move bullets
+      for (let b of bullets) b.y -= bulletSpeed;
+      bullets = bullets.filter(b => b.y > 0);
+
+      // Move alien bullets
+      for (let b of alienBullets) b.y += 3;
+      alienBullets = alienBullets.filter(b => b.y < canvas.height);
+
+      // Alien shooting
+      for (let alien of aliens) {
+        if (alien.alive && Math.random() < alienShootProbability) {
+          alienBullets.push({ x: alien.x + alien.width / 2, y: alien.y + alien.height, width: 4, height: 10 });
+        }
+      }
+
+      // Move aliens downward gradually
+      for (let alien of aliens) {
+        if (alien.alive) alien.y += alienSpeedY;
+      }
+
+      // Collision detection
+      for (let b of bullets) {
+        for (let alien of aliens) {
+          if (alien.alive &&
+              b.x < alien.x + alien.width &&
+              b.x + b.width > alien.x &&
+              b.y < alien.y + alien.height &&
+              b.y + b.height > alien.y) {
+            alien.alive = false;
+            score += 10;
+            bullets = bullets.filter(b2 => b2 !== b);
+          }
+        }
+      }
+
+      // Check if alien bullet hits ship
+      for (let b of alienBullets) {
+        if (b.x < ship.x + ship.width && b.x + b.width > ship.x && b.y < ship.y + ship.height && b.y + b.height > ship.y) {
+          gameRunning = false;
+          alert(`Game Over! Final Score: ${score}`);
+          document.location.reload();
+        }
+      }
+
+      // Check for new level
+      if (aliens.every(a => !a.alive)) {
+        level++;
+        alienSpeedY += 0.2;  // increase alien speed each level
+        bulletSpeed = Math.max(2, bulletSpeed - 0.2); // gradually decrease bullet speed
+        createAliens();
+      }
+
+      // Draw everything
+      drawShip();
+      drawAliens();
+      drawBullets();
+
+      // Update scoreboard
+      scoreboard.innerText = `Score: ${score} | Level: ${level}`;
+
+      requestAnimationFrame(update);
+    }
+    update();
+  </script>
+</body>
+</html>
