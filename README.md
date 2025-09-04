@@ -43,7 +43,7 @@ A modern, feature-rich Space Invaders game built with React.js, featuring stunni
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd space-invaders-react
+   cd space-invador
    ```
 
 2. **Install dependencies**
