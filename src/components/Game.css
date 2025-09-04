@@ -1,0 +1,126 @@
+/* Additional game-specific styles */
+.game-container {
+  position: relative;
+  background: linear-gradient(180deg, #000011 0%, #000033 100%);
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(0, 255, 0, 0.05) 0%, transparent 50%);
+}
+
+/* Ship component */
+.ship {
+  position: absolute;
+  background: linear-gradient(45deg, #00ff00, #00cc00);
+  border-radius: 5px;
+  box-shadow: 
+    0 0 10px #00ff00,
+    inset 0 0 10px rgba(255, 255, 255, 0.3);
+  z-index: 5;
+}
+
+.ship::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 15px solid #00ff00;
+  filter: drop-shadow(0 0 5px #00ff00);
+}
+
+/* Alien component */
+.alien {
+  position: absolute;
+  z-index: 4;
+  transition: all 0.1s ease;
+}
+
+.alien img {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 5px #ff00ff);
+  transition: all 0.3s ease;
+}
+
+.alien:hover {
+  transform: scale(1.1);
+}
+
+/* Bullet components */
+.bullet {
+  position: absolute;
+  border-radius: 2px;
+  z-index: 6;
+}
+
+.bullet.player {
+  background: linear-gradient(180deg, #ffff00, #ffaa00);
+  box-shadow: 0 0 8px #ffff00;
+}
+
+.bullet.alien {
+  background: linear-gradient(180deg, #ff0000, #ff6600);
+  box-shadow: 0 0 8px #ff0000;
+}
+
+/* Particle effects */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #ffff00;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #ffff00;
+  z-index: 7;
+}
+
+/* Animations */
+@keyframes shipThrust {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes alienFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes bulletGlow {
+  0%, 100% { box-shadow: 0 0 8px currentColor; }
+  50% { box-shadow: 0 0 15px currentColor; }
+}
+
+.ship {
+  animation: shipThrust 2s ease-in-out infinite;
+}
+
+.alien {
+  animation: alienFloat 3s ease-in-out infinite;
+}
+
+.bullet {
+  animation: bulletGlow 0.5s ease-in-out infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .ship {
+    width: 25px !important;
+    height: 25px !important;
+  }
+  
+  .alien {
+    width: 25px !important;
+    height: 25px !important;
+  }
+  
+  .bullet {
+    width: 3px !important;
+    height: 8px !important;
+  }
+}
